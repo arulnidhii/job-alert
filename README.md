@@ -46,9 +46,11 @@ Set up environment variables for email credentials:
 ## Open Command Prompt as administrator
 Run these commands:
 
+```bash
 setx SENDER_EMAIL "your_email@gmail.com"
 setx SENDER_PASSWORD "your_email_password"
 
+```
 ## Automating with Windows Task Scheduler
 
 1. Open Task Scheduler
