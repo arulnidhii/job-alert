@@ -58,10 +58,9 @@ Action: Start a program
 Program/script: Path to your Python executable (e.g., C:\Python39\python.exe)
 Add arguments: Path to your script (e.g., C:\Path\To\Your\job_alert_bot.py)
 
-Customization
+# Customization
 
 Modify the scrape_job_board function to adjust scraping logic for different job boards.
 Update the email template in the send_email function to change the format of the alert emails.
 
-Contributing
 Contributions to improve the bot are welcome.
