@@ -51,16 +51,16 @@ setx SENDER_PASSWORD "your_email_password"
 
 ## Automating with Windows Task Scheduler
 
-Open Task Scheduler
-Create a new task
-Set it to run daily at your preferred time
-Action: Start a program
-Program/script: Path to your Python executable (e.g., C:\Python39\python.exe)
-Add arguments: Path to your script (e.g., C:\Path\To\Your\job_alert_bot.py)
+1. Open Task Scheduler
+2. Create a new task
+3. Set it to run daily at your preferred time
+4. Action: Start a program
+5. Program/script: Path to your Python executable (e.g., C:\Python39\python.exe)
+6. Add arguments: Path to your script (e.g., C:\Path\To\Your\job_alert_bot.py)
 
 # Customization
 
-Modify the scrape_job_board function to adjust scraping logic for different job boards.
-Update the email template in the send_email function to change the format of the alert emails.
+1. Modify the scrape_job_board function to adjust scraping logic for different job boards.
+2. Update the email template in the send_email function to change the format of the alert emails.
 
 Contributions to improve the bot are welcome.
