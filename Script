@@ -1,0 +1,116 @@
+from dotenv import load_dotenv
+import os
+import requests
+from bs4 import BeautifulSoup
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+# Load environment variables from .env file
+load_dotenv()
+
+def scrape_job_board(url, board_name):
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    jobs = []
+    if board_name == 'LinkedIn':
+        for job in soup.find_all('div', class_='result-card'):
+            title = job.find('h3', class_='result-card__title').text.strip()
+            company = job.find('h4', class_='result-card__subtitle').text.strip()
+            link = job.find('a', class_='result-card__full-card-link')['href']
+            jobs.append({'title': title, 'company': company, 'link': link})
+    elif board_name == 'Glassdoor':
+        for job in soup.find_all('li', class_='react-job-listing'):
+            title = job.find('a', class_='jobLink').text.strip()
+            company = job.find('div', class_='jobHeader').text.strip()
+            link = 'https://www.glassdoor.com' + job.find('a', class_='jobLink')['href']
+            jobs.append({'title': title, 'company': company, 'link': link})
+    elif board_name == 'Indeed':
+        for job in soup.find_all('div', class_='jobsearch-SerpJobCard'):
+            title = job.find('h2', class_='title').text.strip()
+            company = job.find('span', class_='company').text.strip()
+            link = 'https://www.indeed.com' + job.find('a')['href']
+            jobs.append({'title': title, 'company': company, 'link': link})
+    elif board_name == 'TotalJobs':
+        for job in soup.find_all('div', class_='job'):
+            title = job.find('a', class_='job-title').text.strip()
+            company = job.find('a', class_='company').text.strip()
+            link = 'https://www.totaljobs.com' + job.find('a', class_='job-title')['href']
+            jobs.append({'title': title, 'company': company, 'link': link})
+    return jobs
+
+def filter_jobs(jobs, keywords):
+    filtered_jobs = []
+    for job in jobs:
+        if any(keyword.lower() in job['title'].lower() for keyword in keywords):
+            filtered_jobs.append(job)
+    return filtered_jobs
+
+def send_email(jobs):
+    sender_email = os.environ.get('SENDER_EMAIL')
+    sender_password = os.environ.get('SENDER_PASSWORD')
+    receiver_email = "xxxxxx"
+
+    message = MIMEMultipart("alternative")
+    message["Subject"] = "New Job Listings"
+    message["From"] = sender_email
+    message["To"] = receiver_email
+
+    text = "New job listings found:\n\n"
+    html = """\
+    <html>
+      <body>
+        <h2>New job listings found:</h2>
+        <ul>
+    """
+
+    for job in jobs:
+        text += f"Title: {job['title']}\nCompany: {job['company']}\nLink: {job['link']}\n\n"
+        html += f"""\
+        <li>
+          <strong>{job['title']}</strong><br>
+          Company: {job['company']}<br>
+          <a href="{job['link']}">Apply Here</a>
+        </li>
+        """
+
+    html += """\
+        </ul>
+      </body>
+    </html>
+    """
+
+    part1 = MIMEText(text, "plain")
+    part2 = MIMEText(html, "html")
+
+    message.attach(part1)
+    message.attach(part2)
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, receiver_email, message.as_string())
+
+def main():
+    job_boards = {
+        'LinkedIn': 'https://www.linkedin.com/jobs/search/?keywords=software%20engineer',
+        'Glassdoor': 'https://www.glassdoor.com/Job/software-engineer-jobs-SRCH_KO0,17.htm',
+        'Indeed': 'https://www.indeed.com/jobs?q=software+engineer',
+        'TotalJobs': 'https://www.totaljobs.com/jobs/software-engineer'
+    }
+    
+    keywords = ['entry level', 'Azure', 'data bricks', 'power bi', 'SQL server']
+    
+    matching_jobs = []
+    
+    for board, url in job_boards.items():
+        jobs = scrape_job_board(url, board)
+        filtered_jobs = filter_jobs(jobs, keywords)
+        matching_jobs.extend(filtered_jobs)
+    
+    if matching_jobs:
+        send_email(matching_jobs)
+
+if __name__ == "__main__":
+    main()
